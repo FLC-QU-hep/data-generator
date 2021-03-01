@@ -23,7 +23,7 @@ do
         Marlin MarlinStdReco.xml \
         --constant.lcgeo_DIR=$lcgeo_DIR \
         --constant.DetectorModel=${REC_MODEL} \
-        --constant.OutputBaseName=${FILE} \
+        --constant.OutputBaseName=${BASE}/${FILE} \
         --constant.RunBeamCalReco=false \
         --global.LCIOInputFiles=${BASE}/${FILE}
 

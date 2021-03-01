@@ -13,5 +13,8 @@ reconstruction/ILDConfig/
 #LCIO files
 *.slcio
 
+##Root files
+*.root 
+
 ##ILDConfig
-ILDConfig/
+./ILDConfig/*
