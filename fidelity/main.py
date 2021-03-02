@@ -25,7 +25,7 @@ device = torch.device("cuda" if cuda else "cpu")
 
 save_locations = {
     "Full" : '/beegfs/desy/user/eren/data_generator/pion/hcal_only/uniform/pionP6.hdf5',
-    "Single" : '/beegfs/desy/user/eren/data_generator/pion/hcal_only/pion40part1.hdf5',
+    "Single50" : '/beegfs/desy/user/eren/data_generator/pion/hcal_only/single/pion50GeV.hdf5',
 }
 
 
@@ -68,6 +68,9 @@ if __name__ == "__main__":
     path_prefix = parse_args.ephPrefix
 
 
+    ## Getting real data
+    [real_data, real_ener] = UTIL.getRealImagesCore(save_locations['Single50'], 5000)
+
     ### Testing Fidelity for MODEL ----> WGAN-LO ### 
     
     with open(r'model_conf.yaml') as file:
@@ -91,7 +94,8 @@ if __name__ == "__main__":
         model_WGANLO.load_state_dict(checkpointLO['Generator'])
         model_WGANLO_aD.load_state_dict(checkpointLO['Critic'])
         showers, energy = UTIL.wGAN_LO(model_WGANLO, model_WGANLO_aD, nshowers, 50, 50, 100, LATENT_DIM, device, mip_cut=0.25)
-
+        JSD_singleE = UTIL.JSDsingle_E(real_data, showers, 100, 300, 1200)
+        print (JSD_singleE)
 
 
 

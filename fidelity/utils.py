@@ -2,10 +2,66 @@ import pkbar
 import numpy as np
 import argparse
 import torch
+import matplotlib.pyplot as plt
+import matplotlib as mpl
 import array as arr
 import torch.utils.data
 from torch import nn, optim
 from torch.nn import functional as F
+from models.WGAN.data_loader import HDF5Dataset
+import scipy.spatial.distance as dist
+from scipy import stats
+
+
+def coreCutAna(x):
+    return x[:, :, 19:32, 17:30]
+
+
+def tf_lin_cut_F_coreCut(x):
+    x = coreCutAna(x)
+    x[x < global_thresh] = 0.0
+    return x
+
+
+def getTotE(data, xbins=13, ybins=13, layers=48):
+    data = np.reshape(data,[-1, layers*xbins*ybins])
+    etot_arr = np.sum(data, axis=(1))
+    return etot_arr
+
+def getHitE(data, xbins=13, ybins=13, layers=48):
+    ehit_arr = np.reshape(data,[data.shape[0]*xbins*ybins*layers])
+    #etot_arr = np.trim_zeros(etot_arr)
+    ehit_arr = ehit_arr[ehit_arr != 0.0]
+    return ehit_arr
+
+
+# Valid for pion showers-core ---> 48 x 13 x 13
+def getRealImagesCore(filepath, number):
+    dataset_physeval = HDF5Dataset(filepath, transform=tf_lin_cut_F_coreCut, train_size=number)
+    data = dataset_physeval.get_data_range_tf(0, number)
+    ener = dataset_physeval.get_energy_range(0, number)
+    return [data, ener]
+
+def JSDsingle_E(data_real, data_fake, nbins, minE, maxE):
+    
+    figSE = plt.figure(figsize=(6,6*0.77/0.67))
+    axSE = figSE.add_subplot(1,1,1)
+
+    pSEb = axSE.hist(data_real, bins=nbins, range=[minE, maxE], density=None, 
+                       weights=np.ones_like(data_real)/(float(len(data_real))) )
+
+    pSEa = axSE.hist(data_fake, bins=nbins, range=None, density=None, 
+                       weights=np.ones_like(data_fake)/(float(len(data_fake))))
+    frq1 = pSEa[0]
+    frq2 = pSEb[0]
+
+    # Jensen Shannon Divergence (JSD)
+    if len(frq1) != len(frq2):
+        print('ERROR JSD: Histogram bins are not matching!!')
+    return dist.jensenshannon(frq1, frq2)
+
+    
+
 
 def lat_opt_ngd(G,D,z, energy, batch_size, device, alpha=500, beta=0.1, norm=1000):
     
@@ -100,6 +156,6 @@ def wGAN_LO(model, modelC, number, E_max, E_min, batchsize, latent_dim, device, 
     fake_full = np.vstack(fake_list)
     fake_full = fake_full.reshape(len(fake_full), 48, 13, 13)
 
-
+    print ("\n")
     return fake_full, energy_full
 

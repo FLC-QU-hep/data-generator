@@ -4,5 +4,5 @@ wganLO:
   - ngf: 32
   - latent_dim: 100
   - eph_folders: '/beegfs/desy/user/eren/HCAL-showers/WGAN/output/wGAN_epochs' 
-  - nepochs : 2
+  - nepochs : 4
   - nshowers: 5000
