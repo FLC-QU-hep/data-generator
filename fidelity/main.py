@@ -3,7 +3,7 @@ import argparse
 import torch
 import array as arr
 import torch.utils.data
-from models.data_loader import HDF5Dataset
+from models.WGAN.data_loader import HDF5Dataset
 from torch import nn, optim
 from torch.nn import functional as F
 import models.WGAN.dcgan3Dcore as wgan
@@ -19,6 +19,8 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import utils as UTIL
 
+no_cuda=False
+cuda = not no_cuda and torch.cuda.is_available()
 device = torch.device("cuda" if cuda else "cpu")
 
 save_locations = {
@@ -84,11 +86,11 @@ if __name__ == "__main__":
 
 
     for eph in range(1,nepoch+1):
-        weightsGANLO = path_prefix + '/wgan_'+ str(eph) 
+        weightsGANLO = prefix + '/wgan_'+ str(eph) + '.pth' 
         checkpointLO = torch.load(weightsGANLO)
         model_WGANLO.load_state_dict(checkpointLO['Generator'])
         model_WGANLO_aD.load_state_dict(checkpointLO['Critic'])
-        showers, energy = wGAN_LO(model_WGANLO, model_WGANLO_aD, nshowers, 50, 50, 100, LATENT_DIM, device, mip_cut=0.25):
+        showers, energy = UTIL.wGAN_LO(model_WGANLO, model_WGANLO_aD, nshowers, 50, 50, 100, LATENT_DIM, device, mip_cut=0.25)
 
 
 

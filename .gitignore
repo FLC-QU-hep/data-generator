@@ -6,6 +6,8 @@ weights/
 
 ## pycache files
 models/__pycache__/
+fidelity/models/WGAN/__pycache__/
+fidelity/__pycache__/
 
 # ILDConfig
 reconstruction/ILDConfig/
