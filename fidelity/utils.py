@@ -19,8 +19,13 @@ def coreCutAna(x):
 
 def tf_lin_cut_F_coreCut(x):
     x = coreCutAna(x)
-    x[x < global_thresh] = 0.0
+    x[x < 0.25] = 0.0
     return x
+
+def getOcc(data, xbins=13, ybins=13, layers=48):
+    data = np.reshape(data,[-1, layers*xbins*ybins])
+    occ_arr = (data > 0.0).sum(axis=(1))
+    return occ_arr
 
 
 def getTotE(data, xbins=13, ybins=13, layers=48):
@@ -34,6 +39,45 @@ def getHitE(data, xbins=13, ybins=13, layers=48):
     ehit_arr = ehit_arr[ehit_arr != 0.0]
     return ehit_arr
 
+# calculates the center of gravity (as in CALICE) (0st moment)
+def get0Moment(x):
+    n, l = x.shape
+    tiles = np.tile(np.arange(l), (n,1))
+    y = x * tiles
+    y = y.sum(1)
+    y = y/x.sum(1)
+    return y
+
+def getSpinalProfile(data, xbins=x_size, ybins=y_size, layers=z_size):
+    data = np.reshape(data,[-1, layers, xbins*ybins])
+    etot_arr = np.sum(data, axis=(2))
+    return etot_arr
+
+def getRadialDistribution(data, xbins, ybins, layers):
+    current = np.reshape(data,[-1, layers, xbins,ybins])
+    current_sum = np.sum(current, axis=(0,1))
+ 
+    r_list=[]
+    phi_list=[]
+    e_list=[]
+    n_cent_x = (xbins-1)/2.0
+    n_cent_y = (ybins-1)/2.0
+
+    for n_x in np.arange(0, xbins):
+        for n_y in np.arange(0, ybins):
+            if current_sum[n_x,n_y] != 0.0:
+                r = np.sqrt((n_x - n_cent_x)**2 + (n_y - n_cent_y)**2)
+                r_list.append(r)
+                phi = np.arctan((n_x - n_cent_x)/(n_y - n_cent_y))
+                phi_list.append(phi)
+                e_list.append(current_sum[n_x,n_y])
+                
+    r_arr = np.asarray(r_list)
+    phi_arr = np.asarray(phi_list)
+    e_arr = np.asarray(e_list)
+
+    return r_arr, phi_arr, e_arr
+
 
 # Valid for pion showers-core ---> 48 x 13 x 13
 def getRealImagesCore(filepath, number):
@@ -42,16 +86,16 @@ def getRealImagesCore(filepath, number):
     ener = dataset_physeval.get_energy_range(0, number)
     return [data, ener]
 
-def JSDsingle_E(data_real, data_fake, nbins, minE, maxE):
+def jsdHist(data_real, data_fake, nbins, minE, maxE):
     
     figSE = plt.figure(figsize=(6,6*0.77/0.67))
     axSE = figSE.add_subplot(1,1,1)
 
-    pSEb = axSE.hist(data_real, bins=nbins, range=[minE, maxE], density=None, 
-                       weights=np.ones_like(data_real)/(float(len(data_real))) )
+    
+    pSEa = axSE.hist(data_real, bins=nbins, range=[minE, maxE])
 
-    pSEa = axSE.hist(data_fake, bins=nbins, range=None, density=None, 
-                       weights=np.ones_like(data_fake)/(float(len(data_fake))))
+    pSEb = axSE.hist(data_fake, bins=nbins, range=None)
+
     frq1 = pSEa[0]
     frq2 = pSEb[0]
 
@@ -60,7 +104,26 @@ def JSDsingle_E(data_real, data_fake, nbins, minE, maxE):
         print('ERROR JSD: Histogram bins are not matching!!')
     return dist.jensenshannon(frq1, frq2)
 
+def jsdHist_radial(data_real, data_fake, real_enr, fake_enr, nbins, minE, maxE):
     
+    figSE = plt.figure(figsize=(6,6*0.77/0.67))
+    axSE = figSE.add_subplot(1,1,1)
+
+    
+    pSEa = axSE.hist(data_real, bins=nbins, range=[minE, maxE], weights=real_enr/(float(data_real.shape[0])))
+
+    pSEb = axSE.hist(data_fake, bins=nbins, range=None, weights=fake_enr/(float(fake_enr.shape[0])))
+
+    frq1 = pSEa[0]
+    frq2 = pSEb[0]
+
+    # Jensen Shannon Divergence (JSD)
+    if len(frq1) != len(frq2):
+        print('ERROR JSD: Histogram bins are not matching!!')
+    return dist.jensenshannon(frq1, frq2)
+
+
+
 
 
 def lat_opt_ngd(G,D,z, energy, batch_size, device, alpha=500, beta=0.1, norm=1000):
