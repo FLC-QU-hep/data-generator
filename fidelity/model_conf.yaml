@@ -1,0 +1,8 @@
+
+wganLO:
+  - ndf: 32
+  - ngf: 32
+  - latent_dim: 100
+  - eph_folders: '/beegfs/desy/user/eren/HCAL-showers/WGAN/output/wGAN_epochs' 
+  - nepochs : 10
+  - nshowers: 5000
