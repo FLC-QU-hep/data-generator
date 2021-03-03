@@ -48,7 +48,7 @@ def get0Moment(x):
     y = y/x.sum(1)
     return y
 
-def getSpinalProfile(data, xbins=x_size, ybins=y_size, layers=z_size):
+def getSpinalProfile(data, xbins, ybins, layers):
     data = np.reshape(data,[-1, layers, xbins*ybins])
     etot_arr = np.sum(data, axis=(2))
     return etot_arr
@@ -99,10 +99,12 @@ def jsdHist(data_real, data_fake, nbins, minE, maxE):
     frq1 = pSEa[0]
     frq2 = pSEb[0]
 
+    plt.close()
     # Jensen Shannon Divergence (JSD)
     if len(frq1) != len(frq2):
         print('ERROR JSD: Histogram bins are not matching!!')
     return dist.jensenshannon(frq1, frq2)
+
 
 def jsdHist_radial(data_real, data_fake, real_enr, fake_enr, nbins, minE, maxE):
     
@@ -117,12 +119,29 @@ def jsdHist_radial(data_real, data_fake, real_enr, fake_enr, nbins, minE, maxE):
     frq1 = pSEa[0]
     frq2 = pSEb[0]
 
+    plt.close()
     # Jensen Shannon Divergence (JSD)
     if len(frq1) != len(frq2):
         print('ERROR JSD: Histogram bins are not matching!!')
     return dist.jensenshannon(frq1, frq2)
 
+def jsdHist_spinal(data_real, data_fake, nbins):
+    figSE = plt.figure(figsize=(6,6*0.77/0.67))
+    axSE = figSE.add_subplot(1,1,1)
+    n_layers = data_real.shape[1]
+    hits = np.arange(0, n_layers)+0.5
 
+    pSEa = axSE.hist(hits, bins=nbins, range=[0, 48], weights=np.mean(data_real, 0))
+    pSEb = axSE.hist(hits, bins=nbins, range=[0, 48], weights=np.mean(data_fake, 0))
+
+    frq1 = pSEa[0]
+    frq2 = pSEb[0]
+
+    plt.close()
+    # Jensen Shannon Divergence (JSD)
+    if len(frq1) != len(frq2):
+        print('ERROR JSD: Histogram bins are not matching!!')
+    return dist.jensenshannon(frq1, frq2)    
 
 
 

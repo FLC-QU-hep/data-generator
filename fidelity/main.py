@@ -63,15 +63,7 @@ if __name__ == "__main__":
     path_prefix = parse_args.ephPrefix
 
 
-    ## Getting real data
-    [real_data, real_ener] = UTIL.getRealImagesCore(save_locations['Single50'], 5000)
-    esum_real = UTIL.getTotE(real_data)
-    hitE_real = UTIL.getHitE(real_data)
-    hitN_real = UTIL.getOcc(real_data)
-    cogz_real = UTIL.get0Moment(np.sum(real_data, axis=(2,3)))
-    r_real, phi_real, e_real = UTIL.getRadialDistribution(real_data, xbins=13, ybins=13, layers=48)
-
-
+   
     ### Testing Fidelity for MODEL ----> WGAN-LO ### 
     
     with open(r'model_conf.yaml') as file:
@@ -87,6 +79,21 @@ if __name__ == "__main__":
     model_WGANLO_aD = wgan.DCGAN_D(ndf).to(device)
     model_WGANLO = nn.DataParallel(model_WGANLO)
     model_WGANLO_aD = nn.DataParallel(model_WGANLO_aD)
+
+    save_Totalfide = []
+    save_EnrFide = []
+    save_nhits = []
+    save_eph = []
+
+     ## Getting real data
+    [real_data, real_ener] = UTIL.getRealImagesCore(save_locations['Single50'], nshowers)
+    esum_real = UTIL.getTotE(real_data)
+    hitE_real = UTIL.getHitE(real_data)
+    hitN_real = UTIL.getOcc(real_data)
+    cogz_real = UTIL.get0Moment(np.sum(real_data, axis=(2,3)))
+    r_real, phi_real, e_real = UTIL.getRadialDistribution(real_data, xbins=13, ybins=13, layers=48)
+    spinalE_real = UTIL.getSpinalProfile(real_data, xbins=13, ybins=13, layers=48)
+
 
 
     for eph in range(1,nepoch+1):
@@ -112,7 +119,7 @@ if __name__ == "__main__":
         r_fake, phi_fake, e_fake = UTIL.getRadialDistribution(showers, xbins=13, ybins=13, layers=48)
 
         ## Longt. Energy
-                
+        spinalE_fake = UTIL.getSpinalProfile(showers, xbins=13, ybins=13, layers=48)        
 
 
         JSD_singleE = UTIL.jsdHist(esum_real, esum_fake, 100, 300, 1200)
@@ -120,12 +127,37 @@ if __name__ == "__main__":
         JSD_nhits = UTIL.jsdHist(hitN_real, hitN_fake, 100, 10, 500)
         JSD_cogz  = UTIL.jsdHist(cogz_real, cogz_fake, 50, 0, 50)
         JSD_radial = UTIL.jsdHist_radial(r_real, r_fake, e_real, e_fake, 30, 0, 15)
+        JSD_spinal = UTIL.jsdHist_spinal(spinalE_real, spinalE_fake, 48)
 
 
-        print("Epoch #", eph)
-        print ("SingleE:", JSD_singleE, "\t hitE:", JSD_hitE, "\t Nhits: ", JSD_nhits, "\t Radial:", JSD_radial, "\t CoGz: ", JSD_cogz)
-        totalFid = (JSD_singleE + JSD_nhits + JSD_cogz + JSD_singleE + JSD_radial) / 5 
+        #print("Epoch #", eph)
+        #print ("SingleE:", JSD_singleE, "\t hitE:", JSD_hitE, "\t Nhits: ", JSD_nhits, "\t Radial:", JSD_radial, 
+        #      "\t CoGz: ", JSD_cogz,
+        #      "\t Longt. Profile: ", JSD_spinal
+        #  )
+        totalFid = (JSD_singleE + JSD_nhits + JSD_cogz + JSD_singleE + JSD_radial + JSD_spinal) / 6 
         print("Total Fidelity: ", totalFid)
+        save_Totalfide.append(totalFid)
+        save_EnrFide.append(JSD_singleE)
+        save_nhits.append(JSD_nhits)
+        save_eph.append(eph)
+
+    
+    plt.figure(figsize=(12,4), facecolor='none', dpi=200)
+
+  
+
+    plt.scatter(save_eph, save_Totalfide, color='blue', label='Total Fidelity')
+    plt.scatter(save_eph, save_EnrFide, color='red', label='Energy-Sum')
+    plt.scatter(save_eph, save_nhits, color='black', label='Number of hits')
+    
+    plt.legend(loc='upper right', fontsize=10)
+    plt.xlabel('epochs', fontsize=14)
+    plt.ylabel('fidelity (averaged JSD)', fontsize=16)
+    plt.ylim(0.0,1.0)
+    plt.savefig("3fidelity.png")
+   
+
 
 
 
