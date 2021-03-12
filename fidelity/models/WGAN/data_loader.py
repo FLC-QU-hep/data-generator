@@ -40,7 +40,7 @@ class HDF5Dataset(data.Dataset):
             x = torch.from_numpy(x).float()
         e = torch.from_numpy(self.get_energy(index))
         if torch.sum(x) != torch.sum(x): #checks for NANs
-            return sefl.__getitem__(int(np.rand()*self.__len__()))
+            return self.__getitem__(int(np.rand()*self.__len__()))
         else:
             return x, e
 

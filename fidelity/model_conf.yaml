@@ -3,6 +3,16 @@ wganLO:
   - ndf: 32
   - ngf: 32
   - latent_dim: 100
-  - eph_folders: '/beegfs/desy/user/eren/HCAL-showers/WGAN/output/wGAN_epochs' 
-  - nepochs : 51
+  - eph_folders: '/beegfs/desy/user/eren/HCAL-showers/WGAN/output/wGAN_itr' 
+  - nepochs : 122000
   - nshowers: 2000
+  - type: 'pion'
+
+wganLO_photons:
+  - ndf: 32
+  - ngf: 32
+  - latent_dim: 50
+  - eph_folders: '/beegfs/desy/user/eren/improved_getting_high/WGAN_LO/output/wgan_itrs/' 
+  - nepochs : 186000
+  - nshowers: 2000
+  - type: 'photon'
