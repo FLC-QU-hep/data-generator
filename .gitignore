@@ -9,6 +9,9 @@ models/__pycache__/
 fidelity/models/WGAN/__pycache__/
 fidelity/__pycache__/
 
+## plots
+fidelity/plots/
+
 # ILDConfig
 reconstruction/ILDConfig/
 
@@ -17,6 +20,9 @@ reconstruction/ILDConfig/
 
 ##Root files
 *.root 
+
+## txt files
+fidelity/*.txt
 
 ##ILDConfig
 ./ILDConfig/*
